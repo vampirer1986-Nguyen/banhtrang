@@ -82,6 +82,17 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({
     { label: 'Nước ép / Chanh', url: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=400&q=80' },
   ];
 
+  // Open Add Modal
+  const handleOpenAddModal = () => {
+    setNewName('');
+    setNewCategory('main');
+    setNewPrice(50000);
+    setNewUnit('Đĩa');
+    setNewImage('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80');
+    setAddImageError(false);
+    setShowAddModal(true);
+  };
+
   // Open Edit Modal
   const handleOpenEditModal = (item: MenuItem) => {
     setEditingItem(item);
@@ -369,7 +380,7 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({
             </label>
             <button
               id="btn-add-menu-item"
-              onClick={() => setShowAddModal(true)}
+              onClick={handleOpenAddModal}
               className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs sm:text-sm flex items-center gap-1.5 transition-colors shadow-sm shrink-0 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
@@ -557,41 +568,131 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({
                 />
               </div>
 
+              {/* Image URL & Live Preview */}
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
                   Hình ảnh minh họa
                 </label>
-                <input
-                  type="url"
-                  value={newImage}
-                  onChange={(e) => setNewImage(e.target.value)}
-                  placeholder="https://..."
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none mb-2"
-                />
+
+                {/* Live Preview Box & Input */}
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2.5">
+                  <div className="flex items-center gap-3">
+                    {/* Live Preview Frame */}
+                    <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-slate-200 shrink-0 border border-slate-300 shadow-2xs">
+                      {newImage ? (
+                        <>
+                          <img
+                            src={newImage}
+                            alt="Xem trước hình ảnh"
+                            referrerPolicy="no-referrer"
+                            onLoad={() => setAddImageError(false)}
+                            onError={() => setAddImageError(true)}
+                            className="w-full h-full object-cover"
+                          />
+                          <span
+                            className={`absolute inset-x-0 bottom-0 text-[8px] py-0.5 font-bold text-center text-white ${
+                              addImageError ? 'bg-rose-600/90' : 'bg-emerald-600/90'
+                            }`}
+                          >
+                            {addImageError ? 'Lỗi ảnh' : 'Đang hiển thị'}
+                          </span>
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-1 text-center">
+                          <ImageIcon className="w-6 h-6 mb-0.5 text-slate-300" />
+                          <span className="text-[8px] leading-tight">Chưa có ảnh</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* URL Input & Quick Action Buttons */}
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <input
+                        type="url"
+                        value={newImage}
+                        onChange={(e) => {
+                          setNewImage(e.target.value);
+                          setAddImageError(false);
+                        }}
+                        placeholder="Dán link ảnh tại đây (https://...)"
+                        className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                      />
+
+                      <div className="flex items-center justify-between gap-1 text-[11px]">
+                        <div className="min-w-0 truncate">
+                          {addImageError ? (
+                            <span className="text-rose-600 font-medium">⚠️ Link ảnh lỗi / không tải được</span>
+                          ) : newImage ? (
+                            <span className="text-emerald-700 font-medium">✓ Ảnh tải thành công</span>
+                          ) : (
+                            <span className="text-slate-400">Dán URL hoặc chọn mẫu bên dưới</span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          {newImage && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setNewImage('');
+                                setAddImageError(false);
+                              }}
+                              className="px-2 py-0.5 text-[10px] font-semibold text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                            >
+                              Hủy URL
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                const clipText = await navigator.clipboard.readText();
+                                if (clipText) {
+                                  setNewImage(clipText.trim());
+                                  setAddImageError(false);
+                                }
+                              } catch {
+                                // Fallback
+                              }
+                            }}
+                            className="px-2 py-0.5 text-[10px] font-semibold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-md transition-colors"
+                          >
+                            Dán URL
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Quick image samples */}
-                <p className="text-[11px] text-slate-500 mb-1.5 font-medium">Hoặc chọn nhanh ảnh mẫu có sẵn:</p>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {SAMPLE_IMAGES.map((sample, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setNewImage(sample.url)}
-                      className={`relative h-14 rounded-lg overflow-hidden border-2 transition-all ${
-                        newImage === sample.url ? 'border-amber-500 ring-2 ring-amber-300' : 'border-slate-200'
-                      }`}
-                    >
-                      <img
-                        src={sample.url}
-                        alt={sample.label}
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover"
-                      />
-                      <span className="absolute inset-x-0 bottom-0 bg-slate-950/70 text-white text-[9px] truncate px-1 text-center">
-                        {sample.label}
-                      </span>
-                    </button>
-                  ))}
+                <div className="mt-3">
+                  <p className="text-[11px] text-slate-500 mb-1.5 font-medium">Hoặc chọn nhanh ảnh mẫu có sẵn:</p>
+                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5 max-h-36 overflow-y-auto pr-1">
+                    {SAMPLE_IMAGES.map((sample, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setNewImage(sample.url);
+                          setAddImageError(false);
+                        }}
+                        className={`relative h-14 rounded-lg overflow-hidden border-2 transition-all ${
+                          newImage === sample.url ? 'border-amber-500 ring-2 ring-amber-300' : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <img
+                          src={sample.url}
+                          alt={sample.label}
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover"
+                        />
+                        <span className="absolute inset-x-0 bottom-0 bg-slate-950/70 text-white text-[8px] truncate px-1 text-center block">
+                          {sample.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
