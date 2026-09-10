@@ -1,0 +1,6 @@
+{
+  "name": "Quán Ăn POS - Quản Lý Quán Ăn",
+  "description": "Hệ thống POS Quán bánh tráng nướng dì Nguyệt: Sơ đồ bàn theo khu vực, gọi món tại bàn, chuyển/gộp bàn và thanh toán hóa đơn.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
