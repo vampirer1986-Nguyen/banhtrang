@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Utensils, Clock, DollarSign, Users, AlertCircle } from 'lucide-react';
+import { Utensils, Clock, DollarSign, Users, AlertCircle, ChefHat } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 
 interface HeaderProps {
-  activeTab: 'tables' | 'menu' | 'history';
-  setActiveTab: (tab: 'tables' | 'menu' | 'history') => void;
+  activeTab: 'tables' | 'menu' | 'kitchen' | 'history';
+  setActiveTab: (tab: 'tables' | 'menu' | 'kitchen' | 'history') => void;
   occupiedCount: number;
   totalTables: number;
   waitingCount: number;
@@ -115,6 +115,19 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Utensils className="w-4 h-4" />
             Quản lý Thực đơn
+          </button>
+
+          <button
+            id="tab-kitchen"
+            onClick={() => setActiveTab('kitchen')}
+            className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
+              activeTab === 'kitchen'
+                ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
+            }`}
+          >
+            <ChefHat className="w-4 h-4" />
+            Màn hình bếp (KDS)
           </button>
 
           <button

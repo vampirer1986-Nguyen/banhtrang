@@ -31,6 +31,8 @@ export interface MenuItem {
   unit: string;
 }
 
+export type KitchenItemStatus = 'pending' | 'ready';
+
 export interface OrderItem {
   menuItemId: string;
   name: string;
@@ -38,6 +40,7 @@ export interface OrderItem {
   quantity: number;
   note?: string;
   image?: string;
+  kitchenStatus?: KitchenItemStatus;
 }
 
 export interface KitchenBatch {

@@ -1,1 +1,33 @@
 *
+# Chặn thư mục chứa thư viện bên thứ ba (Nơi ngốn token khủng khiếp nhất nếu AI quét trúng)
+node_modules/
+jspm_packages/
+web_modules/
+
+# Chặn thư mục chứa sản phẩm sau khi biên dịch (Code đã đóng gói, AI không cần đọc)
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# Chặn các file nhật ký hệ thống và file rác tự động sinh ra
+*.log
+logs
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+.stylelintcache
+
+# Chặn các tệp cấu hình môi trường chứa thông tin mật (Token, Key, Mật khẩu)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Chặn file rác hệ điều hành tự tạo
+.DS_Store
+Thumbs.db

@@ -68,18 +68,27 @@ export const MenuManagement: React.FC<MenuManagementProps> = ({
   );
   const [addImageError, setAddImageError] = useState<boolean>(false);
 
-  // Sample image suggestions for quick pick
+  // Sample image suggestions for quick pick (uploaded to ImgBB album https://ibb.co/album/gMTt3t)
   const SAMPLE_IMAGES = [
-    { label: 'Trứng đánh / Điểm tâm', url: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=400&q=80' },
-    { label: 'Trứng cuộn vàng', url: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=400&q=80' },
-    { label: 'Hải sản / Cơm', url: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=400&q=80' },
-    { label: 'Thịt nướng', url: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80' },
-    { label: 'Gà nướng', url: 'https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=400&q=80' },
-    { label: 'Lẩu nghi ngút', url: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=400&q=80' },
-    { label: 'Rau xào', url: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=400&q=80' },
-    { label: 'Bia lon', url: 'https://images.unsplash.com/photo-1608270195726-5f36e4b85c16?auto=format&fit=crop&w=400&q=80' },
-    { label: 'Trà trái cây', url: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=400&q=80' },
-    { label: 'Nước ép / Chanh', url: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=400&q=80' },
+    { label: 'Combo mỗi loại một cái', url: 'https://i.ibb.co/ycQpzMSZ/combo.jpg' },
+    { label: 'Rau răm', url: 'https://i.ibb.co/GvSgXQ0T/rau-ram-1.webp' },
+    { label: 'Hành mềm', url: 'https://i.ibb.co/Y7pqqvhF/hanhmem.jpg' },
+    { label: 'Hành giòn', url: 'https://i.ibb.co/zH7nJGV6/hanhgion.jpg' },
+    { label: 'Trứng đánh', url: 'https://i.ibb.co/sdvBq0jR/trungdanh.jpg' },
+    { label: 'Ốp la', url: 'https://i.ibb.co/G4Kq4ZdX/Banhopla.jpg' },
+    { label: 'Tẩy đá', url: 'https://i.ibb.co/S48wSS0N/tayda.png' },
+    { label: 'Khăn', url: 'https://i.ibb.co/n2DVhhW/khanlanh.jpg' },
+    { label: 'Trà đá', url: 'https://i.ibb.co/jPF1hqbH/trada.png' },
+    { label: '7up', url: 'https://i.ibb.co/spxXDKxx/7up.jpg' },
+    { label: 'Bò húc', url: 'https://i.ibb.co/hRyZ0X24/bohuc.jpg' },
+    { label: 'C2 Chanh', url: 'https://i.ibb.co/kVVkp5Xq/c2chanh.webp' },
+    { label: 'C2 Đào', url: 'https://i.ibb.co/WvrBfLBB/c2dao.jpg' },
+    { label: 'Ô long', url: 'https://i.ibb.co/BHWWxVDz/oolong.jpg' },
+    { label: 'Trà xanh', url: 'https://i.ibb.co/nNrn0CJj/traxanh.jpg' },
+    { label: 'Sting', url: 'https://i.ibb.co/vCc5p7nW/sting.webp' },
+    { label: 'Pepsi', url: 'https://i.ibb.co/tPJT2jcc/pepsi.webp' },
+    { label: 'Coca', url: 'https://i.ibb.co/yvRTfrX/coca.jpg' },
+    { label: 'Nước suối', url: 'https://i.ibb.co/B5z0Hb2v/nuocsuoi.jpg' },
   ];
 
   // Open Add Modal

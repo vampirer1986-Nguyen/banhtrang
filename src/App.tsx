@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Table,
   Order,
@@ -7,20 +7,13 @@ import {
   AreaId,
   TableStatus,
 } from './types';
-import {
-  getStoredTables,
-  saveStoredTables,
-  getStoredOrders,
-  saveStoredOrders,
-  getStoredMenu,
-  saveStoredMenu,
-  getStoredAreas,
-  saveStoredAreas,
-  getStoredCompletedOrders,
-  saveStoredCompletedOrders,
-  getStoredSampleMenu,
-  resetAllData,
-} from './utils/storage';
+import { getStoredSampleMenu, resetAllData } from './utils/storage';
+import { useAppDispatch, useAppSelector } from './store/hooks';
+import { setAreas } from './store/slices/areasSlice';
+import { setTables } from './store/slices/tablesSlice';
+import { setOrders } from './store/slices/ordersSlice';
+import { setMenuItems } from './store/slices/menuSlice';
+import { setCompletedOrders } from './store/slices/completedOrdersSlice';
 import { Header } from './components/Header';
 import { TableMap } from './components/TableMap';
 import { OrderPOSModal } from './components/OrderPOSModal';
@@ -29,19 +22,22 @@ import { TransferMergeModal } from './components/TransferMergeModal';
 import { ReceiptModal } from './components/ReceiptModal';
 import { MenuManagement } from './components/MenuManagement';
 import { OrderHistoryView } from './components/OrderHistoryView';
+import { KitchenDashboard } from './components/KitchenDashboard';
 import { TableManagementModal } from './components/TableManagementModal';
 import { INITIAL_AREAS, INITIAL_TABLES, INITIAL_ORDERS, INITIAL_MENU_ITEMS } from './mockData';
 
 export default function App() {
-  // Main data states initialized from LocalStorage
-  const [areas, setAreas] = useState<Area[]>(() => getStoredAreas());
-  const [tables, setTables] = useState<Table[]>(() => getStoredTables());
-  const [orders, setOrders] = useState<Order[]>(() => getStoredOrders());
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(() => getStoredMenu());
-  const [completedOrders, setCompletedOrders] = useState<Order[]>(() => getStoredCompletedOrders());
+  const dispatch = useAppDispatch();
 
-  // Navigation tab: 'tables' | 'menu' | 'history'
-  const [activeTab, setActiveTab] = useState<'tables' | 'menu' | 'history'>('tables');
+  // Main data, sourced from the global Redux store (persisted to LocalStorage by the store itself)
+  const areas = useAppSelector((state) => state.areas);
+  const tables = useAppSelector((state) => state.tables);
+  const orders = useAppSelector((state) => state.orders);
+  const menuItems = useAppSelector((state) => state.menuItems);
+  const completedOrders = useAppSelector((state) => state.completedOrders);
+
+  // Navigation tab: 'tables' | 'menu' | 'kitchen' | 'history'
+  const [activeTab, setActiveTab] = useState<'tables' | 'menu' | 'kitchen' | 'history'>('tables');
 
   // Active Modals state
   const [isTableManagementOpen, setIsTableManagementOpen] = useState(false);
@@ -63,27 +59,6 @@ export default function App() {
     }, 3200);
   };
 
-  // Sync to LocalStorage on updates
-  useEffect(() => {
-    saveStoredAreas(areas);
-  }, [areas]);
-
-  useEffect(() => {
-    saveStoredTables(tables);
-  }, [tables]);
-
-  useEffect(() => {
-    saveStoredOrders(orders);
-  }, [orders]);
-
-  useEffect(() => {
-    saveStoredMenu(menuItems);
-  }, [menuItems]);
-
-  useEffect(() => {
-    saveStoredCompletedOrders(completedOrders);
-  }, [completedOrders]);
-
   // Handle table selection
   const handleSelectTable = (table: Table) => {
     setSelectedTableForPOS(table);
@@ -98,20 +73,22 @@ export default function App() {
     const totalItemCount = updatedOrder.items.reduce((sum, item) => sum + item.quantity, 0);
 
     if (totalItemCount === 0) {
-      setOrders((prevOrders) => prevOrders.filter((o) => o.id !== updatedOrder.id));
+      dispatch(setOrders(orders.filter((o) => o.id !== updatedOrder.id)));
 
-      setTables((prevTables) =>
-        prevTables.map((t) => {
-          if (t.id === updatedOrder.tableId) {
-            return {
-              ...t,
-              status: 'empty',
-              currentOrderId: undefined,
-              openedAt: undefined,
-            };
-          }
-          return t;
-        })
+      dispatch(
+        setTables(
+          tables.map((t) => {
+            if (t.id === updatedOrder.tableId) {
+              return {
+                ...t,
+                status: 'empty',
+                currentOrderId: undefined,
+                openedAt: undefined,
+              };
+            }
+            return t;
+          })
+        )
       );
 
       setSelectedTableForPOS(null);
@@ -133,21 +110,24 @@ export default function App() {
       newOrders = [...orders, { ...updatedOrder, status: newStatus }];
     }
 
-    setOrders(newOrders);
+    dispatch(setOrders(newOrders));
 
-    // Update table status
-    setTables((prevTables) =>
-      prevTables.map((t) => {
-        if (t.id === updatedOrder.tableId) {
-          return {
-            ...t,
-            status: newStatus,
-            currentOrderId: updatedOrder.id,
-            openedAt: t.openedAt || Date.now(),
-          };
-        }
-        return t;
-      })
+    // Update table status (order 'serving' maps to table 'occupied')
+    const newTableStatus: TableStatus = newStatus === 'waiting_payment' ? 'waiting_payment' : 'occupied';
+    dispatch(
+      setTables(
+        tables.map((t) => {
+          if (t.id === updatedOrder.tableId) {
+            return {
+              ...t,
+              status: newTableStatus,
+              currentOrderId: updatedOrder.id,
+              openedAt: t.openedAt || Date.now(),
+            };
+          }
+          return t;
+        })
+      )
     );
 
     showToast(`Đã lưu đơn hàng cho ${updatedOrder.tableName}!`);
@@ -163,41 +143,45 @@ export default function App() {
     const orderId = sourceTable.currentOrderId;
 
     // 1. Update the order with target table info
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === orderId
-          ? {
-              ...o,
-              tableId: targetTable.id,
-              tableName: targetTable.name,
-              areaId: targetTable.areaId,
-              updatedAt: Date.now(),
-            }
-          : o
+    dispatch(
+      setOrders(
+        orders.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                tableId: targetTable.id,
+                tableName: targetTable.name,
+                areaId: targetTable.areaId,
+                updatedAt: Date.now(),
+              }
+            : o
+        )
       )
     );
 
     // 2. Update tables: source becomes empty, target becomes occupied
-    setTables((prev) =>
-      prev.map((t) => {
-        if (t.id === sourceTableId) {
-          return {
-            ...t,
-            status: 'empty',
-            currentOrderId: undefined,
-            openedAt: undefined,
-          };
-        }
-        if (t.id === targetTableId) {
-          return {
-            ...t,
-            status: sourceTable.status,
-            currentOrderId: orderId,
-            openedAt: sourceTable.openedAt || Date.now(),
-          };
-        }
-        return t;
-      })
+    dispatch(
+      setTables(
+        tables.map((t) => {
+          if (t.id === sourceTableId) {
+            return {
+              ...t,
+              status: 'empty',
+              currentOrderId: undefined,
+              openedAt: undefined,
+            };
+          }
+          if (t.id === targetTableId) {
+            return {
+              ...t,
+              status: sourceTable.status,
+              currentOrderId: orderId,
+              openedAt: sourceTable.openedAt || Date.now(),
+            };
+          }
+          return t;
+        })
+      )
     );
 
     setTransferMergeState(null);
@@ -250,35 +234,39 @@ export default function App() {
     ];
 
     // 1. Update target order, remove source order
-    setOrders((prev) =>
-      prev
-        .filter((o) => o.id !== sourceOrder.id)
-        .map((o) =>
-          o.id === targetOrder.id
-            ? {
-                ...o,
-                items: mergedItems,
-                batches: mergedBatches,
-                customerCount: (o.customerCount || 0) + (sourceOrder.customerCount || 0),
-                updatedAt: Date.now(),
-              }
-            : o
-        )
+    dispatch(
+      setOrders(
+        orders
+          .filter((o) => o.id !== sourceOrder.id)
+          .map((o) =>
+            o.id === targetOrder.id
+              ? {
+                  ...o,
+                  items: mergedItems,
+                  batches: mergedBatches,
+                  customerCount: (o.customerCount || 0) + (sourceOrder.customerCount || 0),
+                  updatedAt: Date.now(),
+                }
+              : o
+          )
+      )
     );
 
     // 2. Source table becomes empty
-    setTables((prev) =>
-      prev.map((t) => {
-        if (t.id === sourceTableId) {
-          return {
-            ...t,
-            status: 'empty',
-            currentOrderId: undefined,
-            openedAt: undefined,
-          };
-        }
-        return t;
-      })
+    dispatch(
+      setTables(
+        tables.map((t) => {
+          if (t.id === sourceTableId) {
+            return {
+              ...t,
+              status: 'empty',
+              currentOrderId: undefined,
+              openedAt: undefined,
+            };
+          }
+          return t;
+        })
+      )
     );
 
     setTransferMergeState(null);
@@ -314,24 +302,26 @@ export default function App() {
     };
 
     // 1. Save to completed orders list
-    setCompletedOrders((prev) => [completed, ...prev]);
+    dispatch(setCompletedOrders([completed, ...completedOrders]));
 
     // 2. Remove from active orders
-    setOrders((prev) => prev.filter((o) => o.id !== orderId));
+    dispatch(setOrders(orders.filter((o) => o.id !== orderId)));
 
     // 3. Clear the table
-    setTables((prev) =>
-      prev.map((t) => {
-        if (t.id === activeOrder.tableId) {
-          return {
-            ...t,
-            status: 'empty',
-            currentOrderId: undefined,
-            openedAt: undefined,
-          };
-        }
-        return t;
-      })
+    dispatch(
+      setTables(
+        tables.map((t) => {
+          if (t.id === activeOrder.tableId) {
+            return {
+              ...t,
+              status: 'empty',
+              currentOrderId: undefined,
+              openedAt: undefined,
+            };
+          }
+          return t;
+        })
+      )
     );
 
     setPaymentOrder(null);
@@ -341,31 +331,33 @@ export default function App() {
 
   // Synchronize dish updates across active orders
   const handleEditMenuItem = (updatedItem: MenuItem) => {
-    setOrders((prevOrders) =>
-      prevOrders.map((order) => {
-        let hasChanged = false;
-        const newItems = order.items.map((ordItem) => {
-          if (ordItem.menuItemId === updatedItem.id) {
-            hasChanged = true;
-            return {
-              ...ordItem,
-              name: updatedItem.name,
-              price: updatedItem.price,
-            };
-          }
-          return ordItem;
-        });
+    dispatch(
+      setOrders(
+        orders.map((order) => {
+          let hasChanged = false;
+          const newItems = order.items.map((ordItem) => {
+            if (ordItem.menuItemId === updatedItem.id) {
+              hasChanged = true;
+              return {
+                ...ordItem,
+                name: updatedItem.name,
+                price: updatedItem.price,
+              };
+            }
+            return ordItem;
+          });
 
-        if (!hasChanged) return order;
+          if (!hasChanged) return order;
 
-        const newSubtotal = newItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
-        return {
-          ...order,
-          items: newItems,
-          subtotal: newSubtotal,
-          total: newSubtotal,
-        };
-      })
+          const newSubtotal = newItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+          return {
+            ...order,
+            items: newItems,
+            subtotal: newSubtotal,
+            total: newSubtotal,
+          };
+        })
+      )
     );
   };
 
@@ -379,7 +371,7 @@ export default function App() {
       capacity: newTableData.capacity,
       status: 'empty',
     };
-    setTables((prev) => [...prev, newTable]);
+    dispatch(setTables([...tables, newTable]));
     const areaName = areas.find((a) => a.id === newTableData.areaId)?.name || '';
     showToast(`Đã thêm "${newTable.name}" vào khu vực ${areaName}!`);
   };
@@ -394,8 +386,8 @@ export default function App() {
       return;
     }
 
-    setTables((prev) => prev.filter((t) => t.id !== tableId));
-    setOrders((prev) => prev.filter((o) => o.tableId !== tableId));
+    dispatch(setTables(tables.filter((t) => t.id !== tableId)));
+    dispatch(setOrders(orders.filter((o) => o.tableId !== tableId)));
     showToast(`Đã xóa "${target.name}" thành công!`);
   };
 
@@ -406,7 +398,7 @@ export default function App() {
       name: newAreaData.name,
       badgeColor: newAreaData.badgeColor,
     };
-    setAreas((prev) => [...prev, newArea]);
+    dispatch(setAreas([...areas, newArea]));
     showToast(`Đã tạo thành công khu vực mới: "${newArea.name}"!`);
   };
 
@@ -426,8 +418,8 @@ export default function App() {
       return;
     }
 
-    setAreas((prev) => prev.filter((a) => a.id !== areaId));
-    setTables((prev) => prev.filter((t) => t.areaId !== areaId));
+    dispatch(setAreas(areas.filter((a) => a.id !== areaId)));
+    dispatch(setTables(tables.filter((t) => t.areaId !== areaId)));
     showToast(`Đã xóa khu vực "${areaToDelete.name}" và các bàn liên quan!`);
   };
 
@@ -444,11 +436,11 @@ export default function App() {
         items: ord.items.filter((item) => sampleItemIds.has(item.menuItemId)),
       })).filter((ord) => ord.items.length > 0);
 
-      setAreas(INITIAL_AREAS);
-      setTables(INITIAL_TABLES);
-      setOrders(sanitizedInitialOrders);
-      setMenuItems(currentSampleMenu);
-      setCompletedOrders([]);
+      dispatch(setAreas(INITIAL_AREAS));
+      dispatch(setTables(INITIAL_TABLES));
+      dispatch(setOrders(sanitizedInitialOrders));
+      dispatch(setMenuItems(currentSampleMenu));
+      dispatch(setCompletedOrders([]));
       showToast('Đã đặt lại dữ liệu ban đầu thành công!');
     }
   };
@@ -505,11 +497,13 @@ export default function App() {
           <MenuManagement
             menuItems={menuItems}
             activeOrders={orders}
-            onUpdateMenu={setMenuItems}
+            onUpdateMenu={(updated) => dispatch(setMenuItems(updated))}
             onEditDish={handleEditMenuItem}
             onToast={showToast}
           />
         )}
+
+        {activeTab === 'kitchen' && <KitchenDashboard />}
 
         {activeTab === 'history' && (
           <OrderHistoryView
@@ -517,10 +511,7 @@ export default function App() {
             areas={areas}
             menuItems={menuItems}
             onPreviewReceipt={(order) => setReceiptOrder(order)}
-            onImportData={(newCompletedOrders) => {
-              setCompletedOrders(newCompletedOrders);
-              saveStoredCompletedOrders(newCompletedOrders);
-            }}
+            onImportData={(newCompletedOrders) => dispatch(setCompletedOrders(newCompletedOrders))}
             onToast={showToast}
           />
         )}
@@ -599,10 +590,8 @@ export default function App() {
           onAddArea={handleAddArea}
           onDeleteArea={handleDeleteArea}
           onImportData={(newAreas, newTables) => {
-            setAreas(newAreas);
-            setTables(newTables);
-            saveStoredAreas(newAreas);
-            saveStoredTables(newTables);
+            dispatch(setAreas(newAreas));
+            dispatch(setTables(newTables));
           }}
           onToast={showToast}
         />
