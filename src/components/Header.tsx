@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Utensils, Clock, DollarSign, Users, AlertCircle, ChefHat } from 'lucide-react';
-import { formatCurrency } from '../utils/formatters';
 
 interface HeaderProps {
   activeTab: 'tables' | 'menu' | 'kitchen' | 'history';
@@ -18,7 +17,6 @@ export const Header: React.FC<HeaderProps> = ({
   occupiedCount,
   totalTables,
   waitingCount,
-  todayRevenue,
   onResetData,
 }) => {
   const [timeStr, setTimeStr] = useState<string>('');
@@ -62,13 +60,6 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Quick Stat Pill & Reset */}
         <div className="flex items-center gap-2">
-          {/* Revenue Pill */}
-          <div className="hidden sm:flex items-center gap-1.5 bg-slate-800/90 border border-slate-700/80 px-3 py-1.5 rounded-lg text-xs">
-            <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-slate-400">Doanh thu:</span>
-            <span className="font-semibold text-emerald-300">{formatCurrency(todayRevenue)}</span>
-          </div>
-
           {/* Occupied pill */}
           <div className="flex items-center gap-1 bg-slate-800 border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs">
             <Users className="w-3.5 h-3.5 text-amber-400" />
