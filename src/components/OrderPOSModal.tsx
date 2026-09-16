@@ -51,8 +51,9 @@ export const OrderPOSModal: React.FC<OrderPOSModalProps> = ({
   // Initialize current order state
   const [items, setItems] = useState<OrderItem[]>(order ? [...order.items] : []);
   const [customerCount, setCustomerCount] = useState<number>(order?.customerCount || table.capacity || 2);
-  // Trạng thái chỉ do hệ thống quyết định (KDS báo bếp xong toàn bộ món), người dùng không được đổi tay
-  const status: 'serving' | 'waiting_payment' = order?.status === 'waiting_payment' ? 'waiting_payment' : 'serving';
+  const [status, setStatus] = useState<'serving' | 'waiting_payment'>(
+    order?.status === 'waiting_payment' ? 'waiting_payment' : 'serving'
+  );
   const [selectedCategory, setSelectedCategory] = useState<MenuCategory | 'all' | 'popular'>('all');
   const [menuViewMode, setMenuViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -488,15 +489,21 @@ export const OrderPOSModal: React.FC<OrderPOSModalProps> = ({
     onClose();
   };
 
-  // Payment handler with batch calculation. Chỉ được mở thanh toán khi bàn đang "Chờ thanh toán"
-  // (tức bếp đã nấu xong toàn bộ món) — không cho tự ý chuyển trạng thái từ "Đang phục vụ".
+  // Payment handler with batch calculation
   const handleOpenPaymentWithBatches = () => {
-    if (status === 'serving') return;
     const nextBatches = calculateBatchesOnSave();
     setSavedBatches(nextBatches);
     const current = { ...buildCurrentOrder(nextBatches), status: 'waiting_payment' as const };
     onSaveOrder(current, 'waiting_payment');
     onOpenPayment(current);
+  };
+
+  // Toggle order status to waiting_payment or back to serving
+  const handleToggleStatus = () => {
+    const newStatus = status === 'serving' ? 'waiting_payment' : 'serving';
+    setStatus(newStatus);
+    const current = { ...buildCurrentOrder(), status: newStatus };
+    onSaveOrder(current, newStatus);
   };
 
   // Popular items detection
@@ -1179,16 +1186,16 @@ export const OrderPOSModal: React.FC<OrderPOSModalProps> = ({
                   )
                 )}
               </div>
-              <span
-                title="Trạng thái chỉ tự động chuyển sang &quot;Chờ thanh toán&quot; khi bếp đã nấu xong toàn bộ món của mọi đợt (không thể đổi thủ công)"
-                className={`px-3 py-1 rounded-xl text-xs font-bold border select-none ${
+              <button
+                onClick={handleToggleStatus}
+                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all border ${
                   status === 'waiting_payment'
                     ? 'bg-amber-100 text-amber-900 border-amber-300'
                     : 'bg-emerald-100 text-emerald-900 border-emerald-300'
                 }`}
               >
                 Trạng thái: {status === 'waiting_payment' ? 'Chờ thanh toán' : 'Đang phục vụ'}
-              </span>
+              </button>
             </div>
 
             {/* Cart Tab Switcher */}
@@ -1528,15 +1535,10 @@ export const OrderPOSModal: React.FC<OrderPOSModalProps> = ({
 
                 <button
                   id="btn-open-payment"
-                  disabled={items.length === 0 || status === 'serving'}
+                  disabled={items.length === 0}
                   onClick={handleOpenPaymentWithBatches}
-                  title={
-                    items.length > 0 && status === 'serving'
-                      ? 'Cần bếp nấu xong toàn bộ món (mọi đợt) trước khi có thể thanh toán'
-                      : undefined
-                  }
                   className={`py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer ${
-                    items.length === 0 || status === 'serving'
+                    items.length === 0
                       ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
                       : 'bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95'
                   }`}
