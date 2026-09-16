@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import {
-  ChefHat,
   CheckCheck,
   Layers,
   ListOrdered,
@@ -232,45 +231,15 @@ export function KitchenDashboard() {
 
   return (
     <div className="space-y-5">
-      {/* TOP BAR */}
-      <div className="bg-slate-900 text-white rounded-2xl shadow-md">
-        <div className="px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-rose-600 flex items-center justify-center text-white shadow-xs">
-              <ChefHat className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-base sm:text-lg font-bold flex items-center gap-2">
-                <span>Màn Hình Bếp (KDS)</span>
-                <span className="text-xs font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full">
-                  quanlybep_mockup
-                </span>
-              </h1>
-              <p className="text-xs text-slate-400">
-                Điều phối nấu nhiều bàn cùng lúc • Sắp xếp: Món chính &rarr; Đồ uống • Tự động loại bỏ khi xong
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl text-xs flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-              <span className="text-slate-400">Đang chờ nấu:</span>
-              <strong className="text-rose-400 font-bold">{kitchenTables.length} bàn</strong>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* CONTROL PANEL */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm space-y-4">
-        {/* 1. Chọn bàn */}
+        {/* Chọn bàn cần nấu cùng lúc */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-100">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
               <h2 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wide">
-                1. Chọn bàn cần nấu cùng lúc (Multi-Table Batching):
+                Chọn bàn cần nấu cùng lúc (Multi-Table Batching):
               </h2>
             </div>
             <p className="text-xs text-slate-500">Chọn 1, 2, 3 bàn hoặc tất cả bàn để gom đơn nấu chung 1 mẻ.</p>
@@ -318,10 +287,10 @@ export function KitchenDashboard() {
           </div>
         </div>
 
-        {/* 2. Chế độ xem */}
+        {/* Chế độ xem */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-bold text-slate-700">2. Chế độ xem List view:</span>
+            <span className="text-xs font-bold text-slate-700">Chế độ xem List view:</span>
 
             <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
               <button
