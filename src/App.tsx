@@ -512,9 +512,6 @@ export default function App() {
             menuItems={menuItems}
             onPreviewReceipt={(order) => setReceiptOrder(order)}
             onImportData={(newCompletedOrders) => dispatch(setCompletedOrders(newCompletedOrders))}
-            onDeleteOrders={(orderIds) =>
-              dispatch(setCompletedOrders(completedOrders.filter((o) => !orderIds.includes(o.id))))
-            }
             onToast={showToast}
           />
         )}
